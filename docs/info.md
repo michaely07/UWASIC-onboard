@@ -9,12 +9,14 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-placeholder
+An SPI peripheral module receives register writes over SPI and uses them to control a PWM peripheral.
 
 ## How to test
 
-placeholder
-
+- `test_pwm_freq` enables output + PWM on one bit at 50% duty cycle and measures the period between
+  consecutive high levels, checking the frequency lands within ~1% of 3 kHz.
+- `test_pwm_duty` checks 0%, 50%, and 100% duty cycle settings, including that 0%/100% hold the output
+  constant rather than toggling.
 ## External hardware
 
-placeholder
+None

@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2024 Michael Yu
- * SPDX-License-Identifier: Apache-2.0
- */
-
 `default_nettype none
 
 module spi_peripheral (

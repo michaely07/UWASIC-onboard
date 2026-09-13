@@ -3,8 +3,6 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
-from cocotb.triggers import FallingEdge
 from cocotb.triggers import Edge
 from cocotb.triggers import ClockCycles
 from cocotb.triggers import Timer
