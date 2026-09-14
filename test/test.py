@@ -191,6 +191,28 @@ async def measure_pwm_period_ns(dut):
     return t2 - t1
 
 
+async def assert_level_holds(dut, expected_level, duration_ns):
+    """
+    Assert uo_out[0] stays at expected_level for the full duration, failing
+    immediately on the first deviation.
+    """
+    assert (int(dut.uo_out.value) & 0x01) == expected_level, (
+        f"uo_out[0] not at level {expected_level} at start of hold check"
+    )
+    end_time_ns = cocotb.utils.get_sim_time(units="ns") + duration_ns
+    while True:
+        remaining_ns = end_time_ns - cocotb.utils.get_sim_time(units="ns")
+        if remaining_ns <= 0:
+            return
+        result = await First(Edge(dut.uo_out), Timer(remaining_ns, units="ns"))
+        if isinstance(result, Timer):
+            return
+        assert (int(dut.uo_out.value) & 0x01) == expected_level, (
+            f"uo_out[0] unexpectedly left level {expected_level} at "
+            f"{cocotb.utils.get_sim_time(units='ns')} ns"
+        )
+
+
 async def measure_duty_cycle_pct(dut):
     """
     Measure duty cycle % of uo_out[0] via rise -> fall -> rise timing."""
@@ -253,14 +275,10 @@ async def test_pwm_duty(dut):
 
     dut._log.info("Check 0% duty cycle forces output constant low")
     await send_spi_transaction(dut, 1, 0x04, 0x00)
-    for _ in range(5):
-        await ClockCycles(dut.clk, 1000)
-        assert dut.uo_out[0].value == 0, "Expected PWM output to stay low for duty cycle 0x00"
+    await assert_level_holds(dut, 0, 2 * PWM_EDGE_TIMEOUT_NS)
 
     dut._log.info("Check 100% duty cycle forces output constant high")
     await send_spi_transaction(dut, 1, 0x04, 0xFF)
-    for _ in range(5):
-        await ClockCycles(dut.clk, 1000)
-        assert dut.uo_out[0].value == 1, "Expected PWM output to stay high for duty cycle 0xFF"
+    await assert_level_holds(dut, 1, 2 * PWM_EDGE_TIMEOUT_NS)
 
     dut._log.info("PWM Duty Cycle test completed successfully")
